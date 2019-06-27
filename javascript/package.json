@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cli": "^1.0.1",
+    "cli-table": "^0.3.1",
     "inquirer": "^6.4.1",
-    "mysql": "^2.17.1"
+    "mysql": "^2.17.1",
+    "table": "^5.4.1"
   }
 }
