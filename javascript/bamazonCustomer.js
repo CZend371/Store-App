@@ -18,6 +18,9 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId);
+    storeItems();
+    setTimeout(askQuestion, 2000);
+
 });
 
 // Function to display items in store
@@ -39,11 +42,10 @@ var storeItems = function () {
         console.log(table.toString());
     })
 };
-storeItems();
 
 // function to ask for input from user
 function askQuestion() {
-    var questions = [{
+    inquirer.prompt({
         name: "id",
         type: "input",
         message: "What is the ID of the product you would like to buy?",
@@ -53,24 +55,55 @@ function askQuestion() {
             } else {
                 return 'Please enter a number(s)';
             }
-        },
-    },
-    {
-        name: "quantity",
-        type: "input",
-        message: "How many would you like to buy?",
-        validate: function (value) {
-            if (Number.isInteger(parseInt(value))) {
-                return true;
-            } else {
-                return 'Please enter a number(s)';
-            }
         }
-    }];
-    inquirer.prompt(questions)
-        .then(function (answer) {
-
-            connection.end();
-        });
-}
-askQuestion();
+    }).then(function (idAnswer) {
+        // id question is stored in var
+        var idSelection = idAnswer.id;
+        console.log(idSelection);
+        connection.query("SELECT * FROM products WHERE id=?", idSelection, function (err, res) {
+            if (err) throw err;
+            if (res.length === 0) {
+                console.log("Please select an id from the table.");
+                askQuestion();
+            }
+            else {
+                inquirer.prompt({
+                    name: "quantity",
+                    type: "input",
+                    message: "How many would you like to buy?",
+                    validate: function (value) {
+                        if (Number.isInteger(parseInt(value))) {
+                            return true;
+                        } else {
+                            return 'Please enter a number(s)';
+                        }
+                    }
+                }).then(function (quantityAnswer) {
+                    var quantitySelection = quantityAnswer.quantity;
+                    console.log(quantitySelection);
+                    if (quantitySelection > res[0].stock_quantity) {
+                        console.log("Sorry we don't have that many!");
+                        askQuestion();
+                    } else {
+                        console.log("Order processed");
+                        var updatedStock = res[0].stock_quantity - quantitySelection;
+                        var total = res[0].price * quantitySelection;
+                        connection.query("UPDATE products SET ? WHERE ?", [{
+                            stock_quantity: updatedStock
+                        },
+                        {
+                            id: res[0].id
+                        }],
+                            function (err) {
+                                if (err) throw err;
+                                console.log("You ordered " + quantitySelection + " of " + res[0].product_name + "!");
+                                console.log("Your total is: $" + total);
+                                connection.end();
+                            }
+                        )
+                    }
+                })
+            }
+        })
+    })
+};
