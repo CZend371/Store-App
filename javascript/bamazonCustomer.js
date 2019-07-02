@@ -20,7 +20,6 @@ connection.connect(function (err) {
     console.log("connected as id " + connection.threadId);
     storeItems();
     setTimeout(askQuestion, 2000);
-
 });
 
 // Function to display items in store
@@ -59,7 +58,6 @@ function askQuestion() {
     }).then(function (idAnswer) {
         // id question is stored in var
         var idSelection = idAnswer.id;
-        console.log(idSelection);
         connection.query("SELECT * FROM products WHERE id=?", idSelection, function (err, res) {
             if (err) throw err;
             if (res.length === 0) {
@@ -78,9 +76,9 @@ function askQuestion() {
                             return 'Please enter a number(s)';
                         }
                     }
+                    // checks if store has enough to fulfill order
                 }).then(function (quantityAnswer) {
                     var quantitySelection = quantityAnswer.quantity;
-                    console.log(quantitySelection);
                     if (quantitySelection > res[0].stock_quantity) {
                         console.log("Sorry we don't have that many!");
                         askQuestion();
@@ -107,3 +105,4 @@ function askQuestion() {
         })
     })
 };
+module.exports(customer);
