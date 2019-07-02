@@ -2,7 +2,6 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 // MAKE SURE TO ADD DASH TO CLI TABLE TO INSTALL CORRECT ONE
 var Table = require("cli-table");
-var customer = require("./bamazonCustomer")
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -122,11 +121,12 @@ function addInventory() {
                     }
                 }).then(function (quantityAnswer) {
                     var quantitySelected = quantityAnswer.quantity;
-                    connection.query("UPDATE products SET stock_quantity=stock_quantity + " + quantitySelected + " WHERE id=" + idSelected, function (err) {
-                        if (err) throw err;
-                        console.log("Product updated!");
-                        backToMenu()
-                    })
+                    connection.query("UPDATE products SET stock_quantity=stock_quantity + " + quantitySelected + " WHERE id=" + idSelected,
+                        function (err) {
+                            if (err) throw err;
+                            console.log("Product updated!");
+                            backToMenu()
+                        })
                 })
             }
         }
@@ -136,7 +136,53 @@ function addInventory() {
 
 // lets manager add a product
 function addProduct() {
+    inquirer.prompt([{
+        name: "newName",
+        type: "input",
+        message: "What is the name of the new product?"
+    },
+    {
+        name: "newDepartment",
+        type: "input",
+        message: "What department do you want it in?"
+    },
+    {
+        name: "newPrice",
+        type: "input",
+        message: "What is the price for this product?"
+    },
+    {
+        name: "newQuantity",
+        type: "input",
+        message: "How many will be available for purchase?",
+        validate: function (value) {
+            if (Number.isInteger(parseInt(value))) {
+                return true;
+            } else {
+                return 'Please enter a number(s)';
+            }
+        }
+    }]).then(function (answers) {
+        var name = answers.newName;
+        var department = answers.newDepartment;
+        var price = answers.newPrice;
+        var quantity = answers.newQuantity;
 
+        connection.query(
+            "INSERT INTO products SET ?",
+            {
+                product_name: name,
+                department_name: department,
+                price: price || 0,
+                stock_quantity: quantity || 0
+            },
+            function (err) {
+                if (err) throw err;
+                console.log("Your product was created!");
+                backToMenu();
+            }
+        );
+    })
 };
 
 function backToMenu() {
