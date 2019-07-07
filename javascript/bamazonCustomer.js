@@ -105,4 +105,3 @@ function askQuestion() {
         })
     })
 };
-module.exports(customer);
